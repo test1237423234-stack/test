@@ -1,0 +1,6 @@
+curl_cffi
+requests
+pycryptodome
+cryptography
+numpy
+Pillow
