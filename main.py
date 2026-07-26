@@ -1329,10 +1329,32 @@ def get_token():
 __all__ = ["getKey", "get_token"]
 
 
-if __name__ == "__main__":
-    url = input("URL: ").strip()
-    result = getKey(url, verbose_cb=print)
-    if result and not result.startswith("bypass fail"):
-        print(f"\n[\u2713] {result}")
+from flask import Flask, request, jsonify
+import os
+
+app = Flask(__name__)
+
+@app.route('/solve', methods=['GET', 'POST'])
+def solve():
+    """Принимает URL и возвращает ключ."""
+    if request.method == 'GET':
+        url = request.args.get('url')
     else:
-        print(f"\n[\u2717] {result}")
+        data = request.get_json()
+        url = data.get('url') if data else None
+
+    if not url:
+        return jsonify({'error': 'Missing "url" parameter'}), 400
+
+    try:
+        key = getKey(url, verbose_cb=print)
+        if key and not key.startswith("bypass fail"):
+            return jsonify({'success': True, 'key': key})
+        else:
+            return jsonify({'success': False, 'error': key}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
